@@ -163,7 +163,7 @@ class Planner(Agent):
             planner_context=self.planner_context,
             intelligence_summary_str=intelligence_summary_str,
             failed_tasks_summary_str=failed_tasks_summary,
-            retrieved_experience_str = retrieved_experience
+            retrieved_experience=retrieved_experience
         )
 
         log.debug(f"[{self.name}] 动态规划提示词:\n{dynamic_planner_prompt}\n")

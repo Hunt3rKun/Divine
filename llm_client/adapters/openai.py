@@ -114,6 +114,7 @@ class OpenAIAdapter(ProviderAdapter):
 
         except Exception as e:
             self._handle_error(e)
+            raise
 
     async def _handle_stream(self, response: Any, model: str, is_reasoning: bool = False) -> AsyncIterator[LLMChunk]:
         """处理流式响应（异步）"""

@@ -109,6 +109,7 @@ class ClaudeAdapter(ProviderAdapter):
 
         except Exception as e:
             self._handle_error(e)
+            raise
 
     async def _handle_stream(self, request_kwargs: dict) -> AsyncIterator[LLMChunk]:
         """处理流式响应（异步）"""

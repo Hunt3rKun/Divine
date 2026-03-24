@@ -231,6 +231,7 @@ class ZhipuAdapter(ProviderAdapter):
                 return self._parse_response(response)
         except Exception as e:
             self._handle_error(e)
+            raise
 
     async def _handle_stream(self, response: Any, model: str) -> AsyncIterator[LLMChunk]:
         """处理流式响应（异步）"""

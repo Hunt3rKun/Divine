@@ -35,7 +35,7 @@ class PromptManager:
     ) -> str:
         """构建规划器提示语"""
 
-        input_variables :Dict[str,Any] = {
+        input_variables: Dict[str, Any] = {
             "goal": planner_context.final_goal,
             "use_ctf_optimizations":True
 

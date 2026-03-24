@@ -42,7 +42,7 @@ class Agent(ABC):
             config: AgentConfig,
             llm_client: Optional[LLMClient] = None,
             tools: Optional[List[Tool]] = None,
-        prompt_manager: Optional[PromptManager] = None,
+            prompt_manager: Optional[PromptManager] = None,
     ):
         self.config = config
         self.llm_client = llm_client or LLMClient.from_env()
