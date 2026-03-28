@@ -1,0 +1,34 @@
+## 执行结果（Observation）
+
+**状态**: {{ "成功" if result.success else "失败" }}
+**执行时间**: {{ "%.3f"|format(result.execution_time) }}s
+
+{% if result.stdout %}
+### 标准输出
+
+```
+{{ result.stdout }}
+```
+{% endif %}
+
+{% if result.stderr %}
+### 标准错误 / 异常信息
+
+```
+{{ result.stderr }}
+```
+{% endif %}
+
+{% if result.return_value is not none %}
+### 返回值
+
+```
+{{ result.return_value }}
+```
+{% endif %}
+
+{% if not result.success %}
+请分析错误原因，调整代码后重试，或选择其他方法继续任务。
+{% else %}
+请分析执行结果，决定下一步操作。如果任务已完成，输出 `TASK_COMPLETE` 并附上摘要。
+{% endif %}

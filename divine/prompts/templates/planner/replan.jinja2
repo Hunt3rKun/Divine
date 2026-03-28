@@ -1,0 +1,62 @@
+你是一名专业的渗透测试规划员。请根据当前黑板状态、任务执行进度和反思建议，对任务图进行调整。
+
+## 当前黑板状态摘要
+
+```json
+{{ blackboard_summary | tojson(indent=2) }}
+```
+
+## 任务 DAG 统计
+
+```json
+{{ dag_stats | tojson(indent=2) }}
+```
+
+## 反思建议
+
+{% if reflections %}
+{% for reflection in reflections %}
+### 反思 {{ loop.index }}
+
+{% if reflection.insights is defined %}
+**洞察：**
+{% for insight in reflection.insights %}
+- {{ insight }}
+{% endfor %}
+{% endif %}
+
+{% if reflection.suggested_tasks is defined %}
+**建议新增任务：**
+{% for task in reflection.suggested_tasks %}
+- {{ task }}
+{% endfor %}
+{% endif %}
+
+{% if reflection.failed_patterns is defined %}
+**失败模式：**
+{% for pattern in reflection.failed_patterns %}
+- {{ pattern }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% else %}
+暂无反思建议。
+{% endif %}
+
+## 调整要求
+
+请基于以上信息，决定是否需要对任务图进行以下操作：
+1. 添加新的任务节点（基于反思建议或新发现）
+2. 移除无效或已过时的任务
+3. 调整任务依赖关系
+
+## 输出格式
+
+请严格按照以下 JSON 结构返回图操作列表：
+
+```json
+{{ output_schema | tojson(indent=2) }}
+```
+
+如果不需要做任何调整，返回空的操作列表 `{"operations": []}`。
