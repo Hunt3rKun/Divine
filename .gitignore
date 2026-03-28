@@ -4,5 +4,4 @@ logs/
 # tests/ - removed to track test files
 __pycache__/
 *.pyc
-CLAUDE.md
 .claude/
