@@ -3,6 +3,7 @@ import subprocess
 from urllib.parse import urlparse
 
 from divine.blackboard.blackboard import Blackboard
+from divine.tools import ToolAdapter, ToolResult
 
 
 def run_command(cmd: str, timeout: int = 60) -> dict:
@@ -96,11 +97,37 @@ def b64decode(data: str) -> str:
     return base64.b64decode(data.encode()).decode()
 
 
+def _tool_result_to_dict(result: ToolResult) -> dict:
+    return {
+        "tool_name": result.tool_name,
+        "status": result.status,
+        "input": dict(result.input),
+        "output": dict(result.output),
+        "error": result.error,
+        "artifact_type": result.artifact_type,
+        "succeeded": result.succeeded,
+    }
+
+
 def create_stdlib(blackboard: Blackboard) -> dict:
     """创建注入 sandbox 的标准库"""
+    tools = ToolAdapter()
     return {
         "run_command": run_command,
         "http_request": http_request,
+        "tcp_connect_check": lambda host, port, timeout=2.0: _tool_result_to_dict(
+            tools.tcp_connect_check(host, port, timeout=timeout)
+        ),
+        "http_probe": lambda url, timeout=5.0: _tool_result_to_dict(
+            tools.http_probe(url, timeout=timeout)
+        ),
+        "https_probe": lambda url, timeout=5.0: _tool_result_to_dict(
+            tools.https_probe(url, timeout=timeout)
+        ),
+        "path_probe": lambda base_url, paths=None, timeout=5.0: _tool_result_to_dict(
+            tools.path_probe(base_url, paths=paths, timeout=timeout)
+        ),
+        "host_info": lambda: _tool_result_to_dict(tools.host_info()),
         "bb_read": blackboard.read,
         "bb_write": blackboard.write,
         "parse_nmap": parse_nmap,

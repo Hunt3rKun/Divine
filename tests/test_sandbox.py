@@ -68,8 +68,22 @@ class TestStdlib:
         stdlib = create_stdlib(bb)
         assert "run_command" in stdlib
         assert "http_request" in stdlib
+        assert "http_probe" in stdlib
+        assert "path_probe" in stdlib
+        assert "host_info" in stdlib
         assert "bb_read" in stdlib
         assert "bb_write" in stdlib
+
+    def test_structured_tool_functions_return_dicts(self):
+        from divine.blackboard import Blackboard
+        from divine.codeact.stdlib import create_stdlib
+
+        stdlib = create_stdlib(Blackboard())
+        result = stdlib["host_info"]()
+        assert result["tool_name"] == "host_info"
+        assert result["status"] == "success"
+        assert result["succeeded"] is True
+        assert result["artifact_type"] == "host_info"
 
     def test_run_command(self):
         from divine.codeact.stdlib import run_command
