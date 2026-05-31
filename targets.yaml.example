@@ -1,0 +1,48 @@
+# Divine 渗透测试配置示例
+# 复制为 targets.yaml 并填入你的实际值
+
+# 目标
+targets:
+  - "http://127.0.0.1:8080"
+
+# 最终目标描述（Planner 据此生成攻击计划）
+goal: "在授权测试环境中完成目标识别、漏洞验证和报告生成。"
+
+# LLM 配置
+llm:
+  providers:
+    minimax:
+      api_key: "${MINIMAX_API_KEY}"
+      base_url: "https://api.minimaxi.com/v1"
+
+    # OpenAI 兼容格式兜底（Ollama、vLLM 等）
+    # openai_compat:
+    #   api_key: "${OPENAI_COMPAT_API_KEY:-ollama}"
+    #   base_url: "http://localhost:11434/v1"
+
+  # 定价（美元/百万 token），用于成本统计，不影响功能
+  pricing:
+    MiniMax-M2.7-highspeed:
+      input: 3.0
+      output: 15.0
+    gpt-4o:
+      input: 2.5
+      output: 10.0
+
+# 各 Agent 使用的模型
+planner_model: "MiniMax-M2.7-highspeed"
+reflector_model: "MiniMax-M2.7-highspeed"
+executor_model: "MiniMax-M2.7-highspeed"
+
+# 运行参数
+max_rounds: 20          # 主循环最大轮次
+max_tasks: 50           # DAG 最大任务数
+timeout: 3600           # 全局超时（秒）
+concurrency: 3          # 同时执行的任务数
+code_execution_timeout: 60  # 单次代码执行超时（秒）
+
+# Blackboard 持久化
+# db_path: ":memory:"   # 默认内存，填路径则持久化到文件
+# db_path: "./divine_session.db"
+
+log_level: "INFO"

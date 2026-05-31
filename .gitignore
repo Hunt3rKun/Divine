@@ -1,6 +1,9 @@
 .env
 .idea
 logs/
+divine/targets.yaml
+divine_debug.log
+*.db
 # tests/ - removed to track test files
 __pycache__/
 *.pyc
