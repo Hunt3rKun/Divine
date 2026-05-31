@@ -1,46 +1,64 @@
-import tempfile
-from pathlib import Path
+from textwrap import dedent
 
-import yaml
-
-from divine.config import DivineConfig, LLMConfig, ProviderConfig
+from divine.config import DivineConfig
 
 
-class TestDivineConfig:
-    def test_default_values(self):
-        cfg = DivineConfig()
-        assert cfg.max_rounds == 20
-        assert cfg.concurrency == 3
-        assert cfg.timeout == 3600
-        assert cfg.db_path == ":memory:"
+def test_from_yaml_maps_basic_fields(tmp_path):
+    path = tmp_path / "targets.yaml"
+    path.write_text(
+        dedent(
+            """
+            target: http://127.0.0.1:8080
+            goal: Identify reachable services
+            max_iterations: 3
+            max_consecutive_failures: 2
+            llm_provider: anthropic
+            """
+        ).strip()
+    )
 
-    def test_from_yaml(self):
-        data = {
-            "targets": ["192.168.1.1"],
-            "goal": "获取目标主机控制权",
-            "max_rounds": 10,
-            "concurrency": 5,
-            "llm": {
-                "providers": {
-                    "openai": {
-                        "api_key": "sk-test",
-                        "base_url": "https://api.openai.com/v1",
-                    }
-                },
-                "pricing": {
-                    "gpt-4o": {"input": 2.5, "output": 10.0}
-                },
-            },
-        }
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(data, f)
-            f.flush()
-            cfg = DivineConfig.from_yaml(Path(f.name))
+    cfg = DivineConfig.from_yaml(path)
 
-        assert cfg.targets == ["192.168.1.1"]
-        assert cfg.goal == "获取目标主机控制权"
-        assert cfg.max_rounds == 10
-        assert cfg.concurrency == 5
-        assert "openai" in cfg.llm.providers
-        assert cfg.llm.providers["openai"].api_key == "sk-test"
-        assert cfg.llm.pricing["gpt-4o"]["input"] == 2.5
+    assert cfg.target == "http://127.0.0.1:8080"
+    assert cfg.goal == "Identify reachable services"
+    assert cfg.max_iterations == 3
+    assert cfg.max_consecutive_failures == 2
+    assert cfg.llm_provider == "anthropic"
+    assert cfg.llm_config == "config/llm.json"
+
+
+def test_from_yaml_targets_list_fills_target_and_scope(tmp_path):
+    path = tmp_path / "targets.yaml"
+    path.write_text(
+        dedent(
+            """
+            targets:
+              - http://10.0.0.1
+              - http://10.0.0.2
+            goal: Map the lab
+            """
+        ).strip()
+    )
+
+    cfg = DivineConfig.from_yaml(path)
+
+    assert cfg.target == "http://10.0.0.1"
+    assert cfg.scope == ["http://10.0.0.1", "http://10.0.0.2"]
+
+
+def test_from_yaml_ignores_unknown_fields(tmp_path):
+    path = tmp_path / "targets.yaml"
+    path.write_text(
+        dedent(
+            """
+            target: http://127.0.0.1
+            goal: Smoke
+            legacy_field: should_be_ignored
+            """
+        ).strip()
+    )
+
+    cfg = DivineConfig.from_yaml(path)
+
+    assert cfg.target == "http://127.0.0.1"
+    assert not hasattr(cfg, "legacy_field")
