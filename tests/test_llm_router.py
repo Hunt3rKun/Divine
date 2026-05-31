@@ -1,10 +1,15 @@
 from unittest.mock import AsyncMock
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
 from divine.llm.base import LLMMessage, LLMProvider, LLMResponse, TokenUsage
 from divine.llm.router import ROUTE_MAP, LLMRouter
 from divine.config import LLMConfig, ProviderConfig
+from divine.logger import LoggingSettings, configure_logging
+from divine.logger.config import LLMTraceSettings
 
 
 class TestRouteMap:
@@ -121,3 +126,52 @@ class TestLLMRouter:
 
         # 1M input @ $2.5 + 1M output @ $10 = $12.5
         assert result.cost == pytest.approx(12.5)
+
+    @pytest.mark.asyncio
+    async def test_chat_records_trace_artifact(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            configure_logging(
+                LoggingSettings(
+                    console_enabled=False,
+                    file_enabled=False,
+                    llm_trace=LLMTraceSettings(
+                        artifact_dir=str(root / "artifacts"),
+                        index_path=str(root / "logs" / "llm_traces.jsonl"),
+                    ),
+                )
+            )
+            config = self._make_config()
+            router = LLMRouter(config)
+            mock_response = LLMResponse(
+                content="trace response",
+                model="gpt-4o",
+                usage=TokenUsage(input_tokens=10, output_tokens=5, total_tokens=15),
+            )
+            mock_provider = AsyncMock(spec=LLMProvider)
+            mock_provider.chat.return_value = mock_response
+            router._providers["openai"] = mock_provider
+
+            await router.chat(
+                "gpt-4o",
+                [LLMMessage(role="user", content="hello")],
+                trace_id="router_trace",
+                agent="planner",
+                prompt_trace={"template_id": "planner.init"},
+                trace_metadata={"task_id": "task-1"},
+                temperature=0.2,
+            )
+
+            mock_provider.chat.assert_called_once_with(
+                [LLMMessage(role="user", content="hello")],
+                model="gpt-4o",
+                temperature=0.2,
+            )
+            index = json.loads((root / "logs" / "llm_traces.jsonl").read_text(encoding="utf-8").splitlines()[0])
+            artifact = json.loads(Path(index["artifact_path"]).read_text(encoding="utf-8"))
+
+            assert index["trace_id"] == "router_trace"
+            assert index["task_id"] == "task-1"
+            assert artifact["agent"] == "planner"
+            assert artifact["request"]["extra"]["temperature"] == 0.2
+            assert artifact["response"]["content"] == "trace response"

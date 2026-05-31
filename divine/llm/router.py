@@ -3,10 +3,12 @@ from typing import Optional
 from loguru import logger
 
 from divine.config import LLMConfig, ProviderConfig
+from divine.context.types import LLMRequest, Message
 from divine.llm.base import LLMMessage, LLMProvider, LLMResponse
 from divine.llm.providers import PROVIDER_CLASSES
 from divine.llm.utils.cost import CostCalculator
 from divine.llm.utils.retry import RetryConfig, RetryHandler
+from divine.logger.trace import LLMTraceRecorder
 
 ROUTE_MAP = {
     "gpt-": "openai",
@@ -55,6 +57,25 @@ class LLMRouter:
 
     async def chat(self, model: str, messages: list[LLMMessage], **kwargs) -> LLMResponse:
         provider = self.get_provider(model)
+        trace_id = kwargs.pop("trace_id", None)
+        agent = kwargs.pop("agent", None)
+        prompt_trace = kwargs.pop("prompt_trace", None)
+        trace_metadata = kwargs.pop("trace_metadata", None)
+        trace_request = LLMRequest(
+            messages=[Message(role=msg.role, content=msg.content) for msg in messages],
+            model=model,
+            extra=kwargs,
+            trace_id=trace_id,
+            agent=agent,
+            prompt_trace=prompt_trace,
+            trace_metadata=trace_metadata,
+        )
+        trace_recorder = LLMTraceRecorder()
+        trace_context = trace_recorder.start_request(
+            trace_request,
+            provider=type(provider).__name__,
+            model=model,
+        )
 
         # 详细记录 LLM 输入（完整内容，不截断）
         logger.info(f"[LLM REQUEST] model={model} provider={type(provider).__name__} messages_count={len(messages)}")
@@ -64,8 +85,12 @@ class LLMRouter:
         async def _call():
             return await provider.chat(messages, model=model, **kwargs)
 
-        response = await self._retry.execute(_call)
-        response.cost = self._cost_calc.calculate(model, response.usage)
+        try:
+            response = await self._retry.execute(_call)
+            response.cost = self._cost_calc.calculate(model, response.usage)
+        except Exception as e:
+            trace_recorder.record_failure(trace_context, trace_request, e)
+            raise
 
         # 详细记录 LLM 输出（完整内容，不截断）
         logger.info(
@@ -74,6 +99,7 @@ class LLMRouter:
             f"cost=${response.cost:.4f}"
         )
         logger.debug(f"[LLM RESPONSE] content:\n--- BEGIN ---\n{response.content}\n--- END ---")
+        trace_recorder.record_success(trace_context, trace_request, response)
 
         return response
 
