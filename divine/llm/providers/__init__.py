@@ -1,13 +1,14 @@
-from divine.llm.providers.openai import OpenAIProvider
-from divine.llm.providers.anthropic import AnthropicProvider
-from divine.llm.providers.zhipu import ZhipuProvider
-from divine.llm.providers.minimax import MiniMaxProvider
-from divine.llm.providers.openai_compat import OpenAICompatProvider
+"""Provider adapter registry."""
 
-PROVIDER_CLASSES = {
-    "openai": OpenAIProvider,
-    "anthropic": AnthropicProvider,
-    "zhipu": ZhipuProvider,
-    "minimax": MiniMaxProvider,
-    "openai_compat": OpenAICompatProvider,
-}
+from divine.llm.providers.anthropic_provider import AnthropicProvider
+from divine.llm.providers.dashscope_provider import DashScopeProvider
+from divine.llm.providers.openai_provider import OpenAICompatibleProvider, OpenAIProvider
+from divine.llm.providers.zhipu_provider import ZhipuProvider
+
+__all__ = [
+    "AnthropicProvider",
+    "DashScopeProvider",
+    "OpenAICompatibleProvider",
+    "OpenAIProvider",
+    "ZhipuProvider",
+]
