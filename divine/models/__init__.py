@@ -8,6 +8,7 @@ from divine.models.audit import (
     PlanningFeedback,
     TaskJudgement,
 )
+from divine.models.execution import ExecutionResult, execution_result_from_final_action
 
 __all__ = [
     "AgentRole", "PentestPhase", "ExecutorType",
@@ -15,4 +16,5 @@ __all__ = [
     "Finding", "Severity", "FindingType",
     "AuditFeedback", "AuditResult", "FailureAttribution",
     "PlanningFeedback", "TaskJudgement",
+    "ExecutionResult", "execution_result_from_final_action",
 ]
