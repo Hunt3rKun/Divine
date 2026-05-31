@@ -5,14 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-import hashlib
-from datetime import datetime, timezone
-from uuid import uuid4
-
 from divine.context.cache_policy import CacheHint, CachePolicy, build_cache_hint
 from divine.context.segments import ContextSection, PromptSegment
 from divine.context.token_budget import TokenBudget, estimate_tokens
-from divine.context.types import LLMRequest, Message
+from divine.llm.types import LLMRequest, Message
+from divine.logger.redaction import sha256_text
+from divine.logger.trace import generate_trace_id
 
 
 @dataclass(frozen=True)
@@ -119,12 +117,3 @@ def _render_dynamic_suffix(working: list[PromptSegment], current: list[PromptSeg
     if current:
         blocks.append("# Current Instruction\n" + "\n\n".join(segment.render() for segment in current))
     return "\n\n".join(blocks)
-
-
-def sha256_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def generate_trace_id(prefix: str = "llm") -> str:
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    return f"{prefix}_{timestamp}_{uuid4().hex[:8]}"

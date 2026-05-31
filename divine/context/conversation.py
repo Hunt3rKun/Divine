@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping
 
-from divine.context.types import Message
+from divine.llm.types import Message
 
 
 @dataclass

@@ -14,8 +14,7 @@ from divine.logger.config import LLMTraceSettings, get_logging_settings
 from divine.logger.redaction import redact_data, summarize_messages
 
 if TYPE_CHECKING:
-    from divine.context.types import LLMRequest
-    from divine.llm.base import LLMResponse
+    from divine.llm.types import LLMRequest, LLMResponse
 
 
 def generate_trace_id(prefix: str = "llm") -> str:
@@ -51,7 +50,7 @@ class LLMTraceRecorder:
             model=model,
             agent=request.agent,
             template_id=_string_or_none(prompt_trace.get("template_id")) if prompt_trace else None,
-            metadata=dict(getattr(request, "trace_metadata", None) or {}),
+            metadata=dict(request.trace_metadata or {}),
             started_at=_now_iso(),
             started_perf=time.perf_counter(),
         )
@@ -91,12 +90,12 @@ class LLMTraceRecorder:
         payload = self._base_payload(context, request, ended_at, "success")
         payload["response"] = self._response_payload(response)
         payload["usage"] = {
-            "prompt_tokens": response.usage.input_tokens,
-            "completion_tokens": response.usage.output_tokens,
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
             "total_tokens": response.usage.total_tokens,
-            "cached_tokens": 0,
-            "cache_miss_tokens": 0,
-            "reasoning_tokens": 0,
+            "cached_tokens": response.usage.cached_tokens,
+            "cache_miss_tokens": response.usage.cache_miss_tokens,
+            "reasoning_tokens": response.usage.reasoning_tokens,
         }
         self._write_json(artifact_path, payload)
         self._append_index(self._index_payload(context, payload, artifact_path, response=response))
@@ -157,8 +156,8 @@ class LLMTraceRecorder:
         return {
             "content": content if self.settings.save_full_response else None,
             "content_length": len(content),
-            "finish_reason": getattr(response, "finish_reason", None),
-            "reasoning_content": getattr(response, "reasoning_content", None) if self.settings.save_full_response else None,
+            "finish_reason": response.finish_reason,
+            "reasoning_content": response.reasoning_content if self.settings.save_full_response else None,
         }
 
     def _index_payload(
@@ -191,12 +190,12 @@ class LLMTraceRecorder:
         if response:
             item.update(
                 {
-                    "prompt_tokens": response.usage.input_tokens,
-                    "completion_tokens": response.usage.output_tokens,
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
                     "total_tokens": response.usage.total_tokens,
-                    "cached_tokens": 0,
-                    "cache_miss_tokens": 0,
-                    "finish_reason": getattr(response, "finish_reason", None),
+                    "cached_tokens": response.usage.cached_tokens,
+                    "cache_miss_tokens": response.usage.cache_miss_tokens,
+                    "finish_reason": response.finish_reason,
                 }
             )
         if error:

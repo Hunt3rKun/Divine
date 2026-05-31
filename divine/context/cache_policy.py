@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import hashlib
-
 from divine.context.segments import PromptSegment
+from divine.logger.redaction import sha256_text
 
 
 @dataclass(frozen=True)
@@ -73,7 +72,3 @@ def build_cache_hint(
         )
 
     return CacheHint(provider=provider, cache_key=cache_key, extra={})
-
-
-def sha256_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
