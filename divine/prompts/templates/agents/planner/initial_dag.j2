@@ -1,0 +1,14 @@
+Current task: generate the initial DAG operations.
+
+Input:
+- target: {{ target }}
+- task_goal: {{ objective }}
+- current_dag: null
+- blackboard_summary: {{ blackboard_summary }}
+- latest_audit_feedback: null
+
+Instructions:
+- Create the smallest useful initial DAG for the task goal.
+- Prefer self-contained nodes with clear success criteria.
+- Describe task objectives, not concrete tool calls.
+- Output must follow the Planner JSON contract.

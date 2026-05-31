@@ -1,0 +1,19 @@
+共享黑板摘要：
+{{ blackboard_summary }}
+
+相关 DAG 状态：
+{{ dag_state }}
+
+相关证据摘要：
+{% for item in evidence %}
+- {{ item.id }}: {{ item.summary }}
+{% else %}
+- 无
+{% endfor %}
+
+最近审计反馈：
+{% for item in audit_feedback %}
+- {{ item.id }}: {{ item.summary }}
+{% else %}
+- 无
+{% endfor %}

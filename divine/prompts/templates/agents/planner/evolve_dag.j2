@@ -1,0 +1,22 @@
+Current task: evolve the DAG using the latest audit feedback.
+
+Current DAG:
+{{ dag_state }}
+
+Execution summary:
+{{ execution_summary }}
+
+Latest audit feedback:
+{{ audit_feedback }}
+
+Instructions:
+- Use the Evaluator output as the source of truth for task judgement, failure attribution, and planning feedback.
+- Do not re-audit evidence.
+- Do not directly modify facts.
+- Output only incremental DAG operations.
+- Use create_node for new work.
+- Use update_node_status for completed, blocked, pruned, or pending status changes.
+- If pruning is needed, represent it as update_node_status with status pruned.
+- Do not create a node that depends on a partial, uncertain, failed, blocked, or pruned node unless the same response first updates that dependency node to completed.
+- For validation or retry work after insufficient evidence, prefer depending on the original node's dependencies instead of the inconclusive node.
+- Output must follow the Planner JSON contract.

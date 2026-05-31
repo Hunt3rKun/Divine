@@ -1,0 +1,22 @@
+Current task: decide the next Executor action for one DAG node.
+
+Node:
+{{ node }}
+
+Available input:
+{{ inputs }}
+
+Success criteria:
+{% for item in success_criteria %}
+- {{ item }}
+{% else %}
+- None provided
+{% endfor %}
+
+Instructions:
+- Output exactly one action.
+- Use tool_call if another tool result is needed for this node.
+- Use final_result if the node objective is complete, cannot progress with the available inputs, or has enough observations to return a result.
+- Do not output multiple tool calls.
+- Do not output a global plan.
+- Output must follow the Executor JSON contract.

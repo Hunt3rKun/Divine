@@ -1,0 +1,11 @@
+{% include "shared/json_response_rules.j2" %}
+
+Router 输出 JSON schema：
+{
+  "selected_agent": "recon | web | host | report | planner | evaluator",
+  "routing_reason": "string",
+  "required_capabilities": ["string"],
+  "risk_level": "low | medium | high",
+  "blocked": false,
+  "block_reason": "string | null"
+}

@@ -1,4 +1,5 @@
-from divine.prompts.engine import PromptEngine
+"""Prompt template rendering utilities."""
+
 from divine.prompts.renderer import PromptRenderer, RenderedPrompt
 
-__all__ = ["PromptEngine", "PromptRenderer", "RenderedPrompt"]
+__all__ = ["PromptRenderer", "RenderedPrompt"]

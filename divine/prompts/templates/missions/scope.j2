@@ -1,0 +1,12 @@
+Target:
+{{ target }}
+
+Task goal:
+{{ objective }}
+
+Notes:
+{% for item in constraints %}
+- {{ item }}
+{% else %}
+- None
+{% endfor %}

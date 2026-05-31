@@ -1,0 +1,67 @@
+Evaluator JSON output contract:
+
+Output exactly one JSON object. Do not use Markdown. Do not include explanatory text outside JSON.
+
+{
+  "schema_version": "evaluator.v1",
+  "agent_name": "evaluator_agent",
+  "feedback_id": "string | null",
+  "node_id": "string",
+  "task_judgement": {
+    "status": "success | failed | partial | uncertain | blocked",
+    "completion_score": 0.0,
+    "confidence": 0.0
+  },
+  "audit_result": {
+    "confirmed_facts": [
+      {
+        "type": "service | technology | web_path | host | finding | credential | session | other",
+        "target": "string",
+        "key": "string",
+        "value": "string | object",
+        "confidence": 0.0,
+        "evidence_refs": ["string"],
+        "reason": "string"
+      }
+    ],
+    "candidate_findings": [],
+    "vulnerabilities": [],
+    "credentials": [],
+    "sessions": [],
+    "evidence_refs": ["string"],
+    "state_updates": [
+      {"field": "string", "value": "object"}
+    ]
+  },
+  "criteria_audit": [
+    {
+      "criterion": "string",
+      "met": false,
+      "evidence_refs": ["string"],
+      "reason": "string"
+    }
+  ],
+  "failure_attribution": {
+    "level": "none | execution_failure | cognitive_failure | strategic_failure | constraint_failure | insufficient_evidence",
+    "primary_cause": "string | null",
+    "secondary_causes": ["string"],
+    "confidence": 0.0,
+    "reason": "string | null"
+  },
+  "planning_feedback": {
+    "recommended_strategy": "expand | regenerate_node | replan_branch | null",
+    "next_focus": "string | null",
+    "invalidated_hypothesis": "string | null",
+    "should_terminate": false
+  },
+  "needs_more_information": [
+    {"field": "string", "reason": "string"}
+  ]
+}
+
+Rules:
+- confirmed_facts must be directly supported by evidence_refs.
+- evidence_refs must refer to evidence IDs provided in the input.
+- Unsupported Executor claims may be kept as candidate_findings or omitted.
+- Use uncertain with insufficient_evidence when evidence cannot support a judgement.
+- Use [] for empty arrays and null for unknown scalar values.

@@ -9,10 +9,10 @@ from typing import Any, Mapping
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateNotFound, meta
 
 from divine.context.segments import ContextSection, PromptSegment
-from divine.context.types import LLMRequest, Message
 from divine.logger.config import LLMTraceSettings, get_logging_settings
 from divine.logger.redaction import redact_data, sha256_text, summarize_mapping
 from divine.logger.trace import LLMTraceRecorder, generate_trace_id
+from divine.llm.types import LLMRequest, Message
 
 
 DEFAULT_TEMPLATE_DIR = Path(__file__).parent / "templates"

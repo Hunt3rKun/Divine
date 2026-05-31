@@ -1,0 +1,55 @@
+Executor JSON output contract:
+
+Output exactly one JSON object. Do not use Markdown. Do not include explanatory text outside JSON.
+
+Tool call action:
+{
+  "schema_version": "executor.v1",
+  "agent_name": "recon_agent | web_agent | host_agent",
+  "action_type": "tool_call",
+  "node_id": "string",
+  "tool_name": "string",
+  "tool_input": {},
+  "rationale": "string"
+}
+
+Final result action:
+{
+  "schema_version": "executor.v1",
+  "agent_name": "recon_agent | web_agent | host_agent",
+  "action_type": "final_result",
+  "node_id": "string",
+  "status": "success | partial | failed | blocked | needs_more_information",
+  "summary": "string",
+  "actions": [
+    {
+      "tool_name": "string",
+      "tool_input": {},
+      "output_ref": "string | null",
+      "status": "success | partial | failed | blocked",
+      "error": "string | null"
+    }
+  ],
+  "candidate_facts": [
+    {
+      "type": "service | technology | web_path | host | finding | credential | session | other",
+      "target": "string",
+      "key": "string",
+      "value": "string | object",
+      "confidence": 0.0,
+      "evidence_refs": ["string"],
+      "reason": "string"
+    }
+  ],
+  "evidence_refs": ["string"],
+  "errors": ["string"],
+  "confidence": 0.0
+}
+
+Rules:
+- Each response must be either one tool_call or one final_result.
+- tool_name must come from the current role tool catalog.
+- tool_input must use the parameter names from the current role tool catalog.
+- final_result.candidate_facts are candidate facts only; the Evaluator decides which facts are confirmed.
+- evidence_refs must refer to artifact IDs or evidence IDs present in observations.
+- Use [] for empty arrays and null for unknown scalar values.

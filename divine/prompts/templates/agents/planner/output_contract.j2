@@ -1,0 +1,48 @@
+Planner JSON output contract:
+
+Output exactly one JSON object. Do not use Markdown. Do not include explanatory text outside JSON.
+
+{
+  "schema_version": "planner.v1",
+  "agent_name": "planner_agent",
+  "status": "planned | evolved | needs_more_information | terminate",
+  "strategy": "initial_plan | expand | regenerate_node | replan_branch | null",
+  "rationale": "string",
+  "dag_operations": [
+    {
+      "operation": "create_node",
+      "local_ref": "string",
+      "node": {
+        "task_type": "asset_discovery | port_check | service_detection | web_fingerprint | web_path_discovery | web_rule_check | response_header_analysis | page_title_extraction | static_resource_analysis | service_detection_validation | web_fingerprint_validation | host_info",
+        "description": "string",
+        "dependencies": ["existing_node_id_or_local_ref"],
+        "edge_type": "dependency | hypothesis | validation | alternative",
+        "risk_level": "low | medium | high",
+        "success_criteria": ["string"],
+        "assigned_executor": "recon_agent | web_agent | host_agent",
+        "target": "string | null"
+      },
+      "reason": "string"
+    },
+    {
+      "operation": "update_node_status",
+      "node_id": "string",
+      "status": "completed | blocked | pruned | pending",
+      "reason": "string"
+    }
+  ],
+  "needs_more_information": [
+    {"field": "string", "reason": "string"}
+  ],
+  "termination_decision": {
+    "should_terminate": false,
+    "reason": "string | null"
+  }
+}
+
+Rules:
+- dag_operations may contain only create_node and update_node_status.
+- A response may contain at most three create_node operations.
+- Use [] when there are no operations.
+- Use null for unknown scalar values.
+- Do not invent confirmed facts.

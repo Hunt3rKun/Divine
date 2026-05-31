@@ -1,0 +1,36 @@
+Current task: audit the execution result and attribute failure if needed.
+
+Target:
+{{ target }}
+
+DAG node:
+{{ node }}
+
+Success criteria:
+{% for item in success_criteria %}
+- {{ item }}
+{% else %}
+- None provided
+{% endfor %}
+
+Execution result:
+{{ execution_result }}
+
+Evidence:
+{% for item in evidence %}
+- {{ item.id }}: {{ item.summary }}
+  content: {{ item.content | default("not provided") }}
+{% else %}
+- None
+{% endfor %}
+
+Blackboard summary:
+{{ blackboard_summary }}
+
+Instructions:
+- Judge the result against the success criteria and task-type audit criteria.
+- Confirm facts only when evidence supports them.
+- Executor candidate_facts are not confirmed until you audit them.
+- If evidence is insufficient, use task_judgement.status uncertain and failure_attribution.level insufficient_evidence.
+- Do not modify the DAG.
+- Output must follow the Evaluator JSON contract.
