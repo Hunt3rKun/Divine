@@ -26,6 +26,7 @@ class LLMRequest:
     trace_id: str | None = None
     agent: str | None = None
     prompt_trace: Mapping[str, Any] | None = None
+    trace_metadata: Mapping[str, Any] | None = None
 
     def normalized_messages(self) -> list[dict[str, Any]]:
         items: list[dict[str, Any]] = []
@@ -35,4 +36,3 @@ class LLMRequest:
             else:
                 items.append(dict(message))
         return items
-
