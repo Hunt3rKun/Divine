@@ -7,6 +7,7 @@ from divine.config import DivineConfig
 from divine.dag import TaskDAG, DAGScheduler
 from divine.agents.planner import Planner
 from divine.agents.reflection import Reflector
+from divine.agents.evaluator import EvaluatorAgent
 from divine.llm.router import LLMRouter
 from divine.models.task import TaskNode
 from divine.prompts.engine import PromptEngine
@@ -34,6 +35,10 @@ class Session:
             router=self._router, prompt_engine=self._prompt_engine,
             model=config.reflector_model,
         )
+        self._evaluator = EvaluatorAgent(
+            router=self._router,
+            model=config.reflector_model,
+        )
 
     async def run(self) -> None:
         logger.info(f"Session 启动: 目标={self._config.targets}, 最大轮次={self._config.max_rounds}")
@@ -57,6 +62,8 @@ class Session:
                 logger.info("所有任务已完成")
                 break
 
+            audit_feedback = await self._audit_completed_tasks(completed)
+
             # 2b. 反思
             reflection = await self._reflector.analyze(
                 blackboard_summary=self._blackboard.summary(),
@@ -72,7 +79,7 @@ class Session:
             operations = await self._planner.replan(
                 blackboard_summary=self._blackboard.summary(),
                 dag_stats=self._dag.stats,
-                reflections=[asdict(reflection)],
+                reflections=[asdict(reflection), *audit_feedback],
             )
             if operations:
                 await self._dag.apply_operations(operations)
@@ -98,6 +105,20 @@ class Session:
         context["targets"] = self._config.targets
         context["goal"] = self._config.goal
         return await self._executor.execute_task(task, context)
+
+    async def _audit_completed_tasks(self, task_ids: list[str]) -> list[dict]:
+        feedback = []
+        for tid in task_ids:
+            task = self._dag.get_task(tid)
+            if task is None or task.result is None:
+                continue
+            audit = await self._evaluator.audit(
+                task=task,
+                execution_result=task.result,
+                blackboard=self._blackboard,
+            )
+            feedback.append(asdict(audit))
+        return feedback
 
     def _get_recent_results(self, task_ids: list[str]) -> list[dict]:
         results = []

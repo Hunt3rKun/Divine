@@ -4,6 +4,13 @@ from divine.session import Session
 from divine.config import DivineConfig, LLMConfig, ProviderConfig
 from divine.models.task import TaskStatus
 from divine.agents.reflection import Reflection
+from divine.models.audit import (
+    AuditFeedback,
+    AuditResult,
+    FailureAttribution,
+    PlanningFeedback,
+    TaskJudgement,
+)
 
 
 def make_config() -> DivineConfig:
@@ -25,6 +32,7 @@ class TestSession:
         assert session._blackboard is not None
         assert session._planner is not None
         assert session._reflector is not None
+        assert session._evaluator is not None
 
     async def test_session_run_basic_flow(self):
         """Test basic flow: init_plan -> run_round -> reflect -> replan -> terminate"""
@@ -41,7 +49,8 @@ class TestSession:
         session._planner.should_terminate = AsyncMock(return_value=(True, "目标达成"))
 
         # Mock executor
-        session._executor.execute_task = AsyncMock(return_value={"status": "done"})
+        session._executor.execute_task = AsyncMock(return_value={"status": "done", "evidence_refs": ["result:t1"]})
+        session._evaluator.audit = AsyncMock(return_value=_audit_feedback("t1"))
 
         # Mock reflector
         session._reflector.analyze = AsyncMock(return_value=Reflection(
@@ -51,6 +60,7 @@ class TestSession:
         await session.run()
 
         session._planner.init_plan.assert_called_once()
+        session._evaluator.audit.assert_called_once()
         assert session._dag.get_task("t1").status == TaskStatus.COMPLETED
 
     async def test_session_max_rounds_terminates(self):
@@ -69,7 +79,19 @@ class TestSession:
         session._planner.replan = AsyncMock(return_value=[])
         session._planner.should_terminate = AsyncMock(return_value=(False, ""))
         session._executor.execute_task = AsyncMock(return_value={})
+        session._evaluator.audit = AsyncMock(side_effect=lambda task, execution_result, blackboard: _audit_feedback(task.id))
         session._reflector.analyze = AsyncMock(return_value=Reflection())
 
         await session.run()
         # Should stop after max_rounds, not infinite loop
+
+
+def _audit_feedback(task_id: str) -> AuditFeedback:
+    return AuditFeedback(
+        feedback_id=f"audit_{task_id}",
+        task_id=task_id,
+        task_judgement=TaskJudgement(status="success", completion_score=1.0, confidence=0.9),
+        audit_result=AuditResult(evidence_refs=[f"result:{task_id}"]),
+        failure_attribution=FailureAttribution(level="none"),
+        planning_feedback=PlanningFeedback(recommended_strategy="expand"),
+    )
