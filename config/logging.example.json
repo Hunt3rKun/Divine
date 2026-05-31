@@ -1,0 +1,27 @@
+{
+  "level": "DEBUG",
+  "console_enabled": true,
+  "console_colorize": true,
+  "file_enabled": true,
+  "file_path": "logs/divine.log",
+  "rotation": "20 MB",
+  "retention": "14 days",
+  "compression": "zip",
+  "enqueue": true,
+  "backtrace": false,
+  "diagnose": false,
+  "serialize": false,
+  "llm_trace": {
+    "enabled": true,
+    "artifact_dir": "artifacts/llm",
+    "index_path": "logs/llm_traces.jsonl",
+    "save_full_prompt": true,
+    "save_full_response": true,
+    "save_on_success": true,
+    "save_on_failure": true,
+    "variable_preview_chars": 300,
+    "large_value_threshold_chars": 2000,
+    "artifact_retention_days": 14,
+    "index_max_bytes": 20971520
+  }
+}
