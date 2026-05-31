@@ -29,10 +29,27 @@
 {{ output_schema | tojson(indent=2) }}
 ```
 
-每个图操作（graph_operation）应为以下之一：
-- `add_task`：添加新任务节点
-- `remove_task`：移除任务节点
-- `add_dependency`：添加任务依赖边
+示例：
+```json
+[
+  {
+    "command": "add_node",
+    "node_data": {
+      "id": "recon_http_scan",
+      "description": "扫描目标 Web 服务，识别技术栈和入口点",
+      "phase": "recon",
+      "executor_type": "web",
+      "dependencies": [],
+      "priority": 10
+    }
+  }
+]
+```
+
+每个操作的 `command` 字段必须是以下之一：
+- `add_node`：添加新任务节点（需要 `node_data`）
+- `remove_node`：移除任务节点（需要 `node_id`）
+- `update_node`：更新任务属性（需要 `node_id` 和 `updates`）
 
 请确保：
 1. 任务 ID 唯一且具描述性（如 `recon_port_scan_1`）

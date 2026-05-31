@@ -42,7 +42,11 @@ class Planner:
             LLMMessage(role="user", content=f"请为以下目标制定渗透测试计划: {goal}"),
         ]
         response = await self._router.chat(self._model, messages)
-        return self._parse_operations(response.content)
+        operations = self._parse_operations(response.content)
+        logger.info(f"Planner.init_plan: 解析出 {len(operations)} 个操作")
+        for op in operations:
+            logger.info(f"  操作: {op.get('command')} -> {op.get('node_data', {}).get('id', op.get('node_id', '?'))}: {op.get('node_data', {}).get('description', '')[:80]}")
+        return operations
 
     async def replan(self, blackboard_summary: dict, dag_stats: dict,
                      reflections: list[dict]) -> list[dict]:
@@ -55,12 +59,16 @@ class Planner:
             LLMMessage(role="user", content="根据当前进度，是否需要调整攻击计划？"),
         ]
         response = await self._router.chat(self._model, messages)
-        return self._parse_operations(response.content)
+        operations = self._parse_operations(response.content)
+        logger.info(f"Planner.replan: 解析出 {len(operations)} 个操作")
+        for op in operations:
+            logger.info(f"  操作: {op.get('command')} -> {op.get('node_data', {}).get('id', op.get('node_id', '?'))}: {op.get('node_data', {}).get('description', '')[:80]}")
+        return operations
 
     async def should_terminate(self, blackboard_summary: dict,
-                               dag_stats: dict) -> tuple[bool, str]:
+                               dag_stats: dict, goal: str = "") -> tuple[bool, str]:
         prompt = self._prompt_engine.build_terminate_check_prompt(
-            blackboard_summary=blackboard_summary, dag_stats=dag_stats, goal="",
+            blackboard_summary=blackboard_summary, dag_stats=dag_stats, goal=goal,
         )
         messages = [
             LLMMessage(role="system", content=prompt),
@@ -69,8 +77,12 @@ class Planner:
         response = await self._router.chat(self._model, messages)
         try:
             data = self._extract_json_object(response.content)
-            return data.get("terminate", False), data.get("reason", "")
-        except Exception:
+            terminate = data.get("terminate", False)
+            reason = data.get("reason", "")
+            logger.info(f"Planner.should_terminate: terminate={terminate}, reason={reason}")
+            return terminate, reason
+        except Exception as e:
+            logger.warning(f"Planner.should_terminate: 解析失败: {e}, content={response.content[:200]}")
             return False, "无法解析终止判断"
 
     def _parse_operations(self, content: str) -> list[dict]:

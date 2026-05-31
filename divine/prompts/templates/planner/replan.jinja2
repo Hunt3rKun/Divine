@@ -59,4 +59,6 @@
 {{ output_schema | tojson(indent=2) }}
 ```
 
-如果不需要做任何调整，返回空的操作列表 `{"operations": []}`。
+如果不需要做任何调整，返回空数组 `[]`。
+
+注意：`command` 字段必须是 `add_node`、`remove_node` 或 `update_node` 之一。

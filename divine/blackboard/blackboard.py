@@ -142,6 +142,7 @@ class Blackboard:
                 "entries": [
                     {
                         "key": e.key,
+                        "value": e.value,
                         "source": e.source,
                         "version": e.version,
                         "timestamp": e.timestamp.isoformat(),

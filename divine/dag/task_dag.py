@@ -96,9 +96,10 @@ class TaskDAG:
 
     async def apply_operations(self, operations: list[dict]) -> None:
         for op in operations:
-            cmd = op["command"]
-            if cmd == "add_node":
-                data = op["node_data"]
+            cmd = op.get("command", "")
+            # 兼容 add_task/add_node 两种写法
+            if cmd in ("add_node", "add_task"):
+                data = op.get("node_data") or op
                 task = TaskNode(
                     id=data["id"],
                     description=data.get("description", ""),
@@ -108,9 +109,9 @@ class TaskDAG:
                     priority=data.get("priority", 0),
                 )
                 await self.add_task(task)
-            elif cmd == "remove_node":
-                await self.remove_task(op["node_id"])
-            elif cmd == "update_node":
+            elif cmd in ("remove_node", "remove_task"):
+                await self.remove_task(op.get("node_id", ""))
+            elif cmd in ("update_node", "update_task"):
                 node_id = op["node_id"]
                 updates = op.get("updates", {})
                 async with self._lock:

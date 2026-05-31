@@ -37,8 +37,9 @@ class LLMRouter:
             logger.debug("Initialized fallback openai_compat provider")
 
     def _resolve_provider(self, model: str) -> str:
+        model_lower = model.lower()
         for prefix, provider_name in ROUTE_MAP.items():
-            if model.startswith(prefix):
+            if model_lower.startswith(prefix):
                 return provider_name
         return "openai_compat"
 
@@ -55,11 +56,25 @@ class LLMRouter:
     async def chat(self, model: str, messages: list[LLMMessage], **kwargs) -> LLMResponse:
         provider = self.get_provider(model)
 
+        # 详细记录 LLM 输入（完整内容，不截断）
+        logger.info(f"[LLM REQUEST] model={model} provider={type(provider).__name__} messages_count={len(messages)}")
+        for i, msg in enumerate(messages):
+            logger.debug(f"[LLM REQUEST] messages[{i}] role={msg.role} len={len(msg.content)}\n--- BEGIN ---\n{msg.content}\n--- END ---")
+
         async def _call():
             return await provider.chat(messages, model=model, **kwargs)
 
         response = await self._retry.execute(_call)
         response.cost = self._cost_calc.calculate(model, response.usage)
+
+        # 详细记录 LLM 输出（完整内容，不截断）
+        logger.info(
+            f"[LLM RESPONSE] model={response.model} "
+            f"tokens={response.usage.input_tokens}in/{response.usage.output_tokens}out "
+            f"cost=${response.cost:.4f}"
+        )
+        logger.debug(f"[LLM RESPONSE] content:\n--- BEGIN ---\n{response.content}\n--- END ---")
+
         return response
 
     async def chat_stream(self, model: str, messages: list[LLMMessage], **kwargs):

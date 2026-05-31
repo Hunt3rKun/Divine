@@ -82,6 +82,7 @@ class Session:
             should_stop, reason = await self._planner.should_terminate(
                 blackboard_summary=self._blackboard.summary(),
                 dag_stats=self._dag.stats,
+                goal=self._config.goal,
             )
             if should_stop:
                 logger.info(f"目标达成: {reason}")
@@ -93,6 +94,9 @@ class Session:
         context = self._blackboard.summary(
             sections=["hosts", "ports", "credentials", "findings"],
         )
+        # Inject target info so executor knows what to attack
+        context["targets"] = self._config.targets
+        context["goal"] = self._config.goal
         return await self._executor.execute_task(task, context)
 
     def _get_recent_results(self, task_ids: list[str]) -> list[dict]:
