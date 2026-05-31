@@ -4,6 +4,8 @@
 logs/
 artifacts/
 config/logging.json
+config/llm.json
+.codex
 divine/targets.yaml
 divine_debug.log
 *.db

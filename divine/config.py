@@ -1,54 +1,38 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 
 import yaml
 
 
 @dataclass
-class ProviderConfig:
-    """单个 LLM provider 配置"""
-    api_key: str = ""
-    base_url: str = ""
-    timeout: float = 120.0
-
-
-@dataclass
-class LLMConfig:
-    """LLM 总配置"""
-    providers: dict[str, ProviderConfig] = field(default_factory=dict)
-    pricing: dict[str, dict[str, float]] = field(default_factory=dict)
-
-
-@dataclass
 class DivineConfig:
-    """全局配置"""
-    targets: list[str] = field(default_factory=list)
+    """引擎运行配置，从 targets YAML 加载并映射到 TaskContext。"""
+
+    target: str = ""
     goal: str = ""
-    llm: LLMConfig = field(default_factory=LLMConfig)
-    max_rounds: int = 20
-    max_tasks: int = 50
-    timeout: int = 3600
-    concurrency: int = 3
-    code_execution_timeout: int = 60
-    planner_model: str = "claude-sonnet-4-20250514"
-    reflector_model: str = "claude-sonnet-4-20250514"
-    executor_model: str = "claude-sonnet-4-20250514"
-    db_path: str = ":memory:"
-    log_level: str = "INFO"
+    scope: list[str] = field(default_factory=list)
+    max_iterations: int = 20
+    max_consecutive_failures: int = 5
+    task_id: str | None = None
+    llm_provider: str | None = None
+    llm_model: str | None = None
+    llm_config: str = "config/llm.json"
+    logging_config: str = "config/logging.json"
 
     @classmethod
     def from_yaml(cls, path: Path) -> "DivineConfig":
-        """从 YAML 文件加载配置"""
+        """从 YAML 文件加载配置。
+
+        兼容 `targets: [...]` 写法：取第一个作为 target，整体作为默认 scope。
+        未知字段会被忽略，保持向后兼容。
+        """
         with open(path) as f:
-            raw = yaml.safe_load(f)
+            raw = yaml.safe_load(f) or {}
 
-        llm_raw = raw.pop("llm", {})
-        providers = {}
-        for name, pconf in llm_raw.get("providers", {}).items():
-            providers[name] = ProviderConfig(**pconf)
-        llm = LLMConfig(
-            providers=providers,
-            pricing=llm_raw.get("pricing", {}),
-        )
+        targets = raw.pop("targets", None)
+        if targets and not raw.get("target"):
+            raw["target"] = targets[0]
+            raw.setdefault("scope", list(targets))
 
-        return cls(llm=llm, **raw)
+        known = {f.name for f in fields(cls)}
+        return cls(**{key: value for key, value in raw.items() if key in known})

@@ -1,0 +1,37 @@
+{
+  "provider": "openai",
+  "timeout": 60,
+  "generation": {
+    "max_tokens": 4096,
+    "temperature": 0.2
+  },
+  "providers": {
+    "openai": {
+      "api_key": "replace-with-openai-api-key",
+      "model": "gpt-5.5"
+    },
+    "anthropic": {
+      "api_key": "replace-with-anthropic-api-key",
+      "model": "claude-opus-4-1-20250805"
+    },
+    "deepseek": {
+      "api_key": "replace-with-deepseek-api-key",
+      "base_url": "https://api.deepseek.com",
+      "model": "deepseek-v4-flash"
+    },
+    "dashscope": {
+      "api_key": "replace-with-dashscope-api-key",
+      "model": "qwen3-max-2026-01-23"
+    },
+    "zhipu": {
+      "api_key": "replace-with-zhipuai-api-key",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4",
+      "model": "glm-5.1"
+    },
+    "openai_compatible": {
+      "api_key": "replace-with-compatible-api-key",
+      "base_url": "https://api.moonshot.cn/v1",
+      "model": "moonshot-v1-128k"
+    }
+  }
+}

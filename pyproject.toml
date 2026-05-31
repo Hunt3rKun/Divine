@@ -8,21 +8,19 @@ version = "0.1.0"
 description = "多智能体自动化渗透测试框架"
 requires-python = ">=3.11"
 dependencies = [
-    "networkx>=3.0",
-    "jinja2>=3.0",
+    "jinja2>=3.1",
     "typer>=0.9.0",
     "pyyaml>=6.0",
-    "openai>=1.0.0",
-    "anthropic>=0.40.0",
-    "zhipuai>=2.0.0",
-    "loguru>=0.7.0",
-    "aiohttp>=3.9.0",
+    "openai>=1.90.0",
+    "anthropic>=0.60.0",
+    "dashscope>=1.25.11",
+    "zhipuai>=2.1.5",
+    "loguru>=0.7.2",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
-    "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
 ]
 
@@ -30,5 +28,4 @@ dev = [
 divine = "divine.cli:app"
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
 testpaths = ["tests"]
